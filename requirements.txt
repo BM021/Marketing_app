@@ -10,7 +10,7 @@ click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.3.0
 exceptiongroup==1.1.2
-fastapi==0.100.1
+fastapi~=0.100.0
 fastapi-cache==0.1.0
 fastapi-cache2==0.2.1
 flower==2.0.0
@@ -23,7 +23,7 @@ pendulum==2.1.2
 prometheus-client==0.17.1
 prompt-toolkit==3.0.39
 psycopg2-binary==2.9.6
-pydantic==2.1.1
+pydantic~=2.0.3
 pydantic_core==2.4.0
 python-dateutil==2.8.2
 python-multipart==0.0.6
@@ -38,3 +38,17 @@ tzdata==2023.3
 uvicorn==0.23.1
 vine==5.0.0
 wcwidth==0.2.6
+
+pip~=21.2.3
+cryptography~=41.0.2
+trio~=0.22.2
+outcome~=1.2.0
+Django~=4.2.2
+SQLAlchemy~=2.0.19
+requests~=2.31.0
+wsproto~=1.2.0
+cffi~=1.15.1
+Jinja2~=3.1.2
+httpx~=0.24.1
+setuptools~=57.4.0
+attrs~=23.1.0

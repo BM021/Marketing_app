@@ -1,8 +1,8 @@
 from typing import Annotated, Optional
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, Path, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException,  UploadFile, Form
 from starlette import status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr
 
 from datetime import datetime
 
@@ -40,14 +40,16 @@ celery = Celery('tasks', broker='redis://localhost:6379')
 
 
 # sending gmail (not finished 100% but working)
-def get_email_template_dashboard(username: str, db):
+def get_email_template_dashboard(username: str, db, to_user):
     form = db.query(SendingMessage).all()
+
     email = EmailMessage()
-    email['Subject'] = 'Сообщения'
+    email['Subject'] = 'Сообщение'
     email['From'] = 'bakhodyrov17@gmail.com'
-    email['To'] = 'YOUR GMAIL'  # don't forget to input your gmail!
+    email['To'] = to_user  # don't forget to input your gmail!
+
     email.set_content(
-        f'Здравствуйте, {username}!'
+        f'Hello from MARS! {username}\n'
         f'{form[1].text}\n'
     )
 
@@ -56,8 +58,8 @@ def get_email_template_dashboard(username: str, db):
 
 # celery task
 # @celery.tasks
-def send_email_report_dashboard(username: str, db):
-    email = get_email_template_dashboard(username, db)
+def send_email_report_dashboard(username: str, db, to_user):
+    email = get_email_template_dashboard(username, db, to_user)
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login('bakhodyrov17@gmail.com', 'ngsxjidcprsfgwpi')
         server.send_message(email)
@@ -75,12 +77,13 @@ class MessageRequest(BaseModel):
 
 class User(BaseModel):
     username: str = 'MARS'
+    send_to_user_email: EmailStr
 
 
 # sending email with background tasks or celery
 @router.get('/send-messages', status_code=status.HTTP_200_OK)
 async def get_dashboard(background_tasks: BackgroundTasks, db: db_dependency, user=Depends(User)):
-    background_tasks.add_task(send_email_report_dashboard, user.username, db)
+    background_tasks.add_task(send_email_report_dashboard, user.username, db, user.send_to_user_email)
     # send_email_report_dashboard(user.username)  # for celery
 
     return {'status': status.HTTP_200_OK, 'data': 'Сообщение отправилено'}
