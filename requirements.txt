@@ -9,7 +9,7 @@ click==8.1.6
 click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.3.0
-dnspython==2.4.1
+dnspython==2.3.0
 email-validator==2.0.0.post2
 exceptiongroup==1.1.2
 fastapi==0.100.1
