@@ -14,7 +14,7 @@ from models import SendingMessage
 import smtplib
 from email.message import EmailMessage
 
-from celery import Celery
+# from celery import Celery
 
 router = APIRouter(
     prefix='/messages',
@@ -34,7 +34,7 @@ def get_db():
 SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 465
 
-celery = Celery('tasks', broker='redis://localhost:6379')
+# celery = Celery('tasks', broker='redis://localhost:6379')
 
 
 # sending gmail (not finished 100% but working)
