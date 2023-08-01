@@ -1,6 +1,6 @@
-from typing import Annotated, Optional
+from typing import Optional
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException,  UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException,  UploadFile
 from starlette import status
 from pydantic import BaseModel, EmailStr
 
@@ -31,7 +31,6 @@ def get_db():
         db.close()
 
 
-db_dependency = Annotated[Session, Depends(get_db)]
 
 SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 465
@@ -66,11 +65,11 @@ def send_email_report_dashboard(username: str, db, to_user):
 
 
 class MessageRequest(BaseModel):
-    text: Annotated[str, Form()]
-    start_sending: Annotated[datetime, Form()] = datetime.utcnow()
-    end_sending: Annotated[datetime, Form()] = datetime.utcnow()
-    notes: Annotated[str, Form()]
-    video_tg_file_id: Optional[Annotated[str, Form()]]
+    text: str
+    start_sending: datetime = datetime.utcnow()
+    end_sending: datetime = datetime.utcnow()
+    notes: str
+    video_tg_file_id: Optional[str]
     video1: UploadFile = None
     image1: UploadFile = None
 
@@ -82,7 +81,7 @@ class User(BaseModel):
 
 # sending email with background tasks or celery
 @router.get('/send-messages', status_code=status.HTTP_200_OK)
-async def get_dashboard(background_tasks: BackgroundTasks, db: db_dependency, user=Depends(User)):
+async def get_dashboard(background_tasks: BackgroundTasks, db: Session = Depends(get_db), user=Depends(User)):
     background_tasks.add_task(send_email_report_dashboard, user.username, db, user.send_to_user_email)
     # send_email_report_dashboard(user.username)  # for celery
 
@@ -91,7 +90,7 @@ async def get_dashboard(background_tasks: BackgroundTasks, db: db_dependency, us
 
 # start restefull api of messages
 @router.get('/', status_code=status.HTTP_200_OK)
-async def get_all_messages(db: db_dependency):
+async def get_all_messages(db: Session = Depends(get_db)):
     result = db.query(SendingMessage).all()
     if result:
         return result
@@ -100,7 +99,7 @@ async def get_all_messages(db: db_dependency):
 
 
 @router.post('/add-message', status_code=status.HTTP_201_CREATED)
-async def add_message(db: db_dependency, message_request: MessageRequest = Depends(MessageRequest)):
+async def add_message(db: Session = Depends(get_db), message_request: MessageRequest = Depends(MessageRequest)):
     message_model = SendingMessage(
         text=message_request.text,
         start_sending=message_request.start_sending,
@@ -116,7 +115,7 @@ async def add_message(db: db_dependency, message_request: MessageRequest = Depen
 
 
 @router.put('/update-message/{message_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def update_new(message_id: int, db: db_dependency,
+async def update_new(message_id: int, db: Session = Depends(get_db),
                      message_request: MessageRequest = Depends(MessageRequest)):
     message_model = db.query(SendingMessage).filter(SendingMessage.id == message_id).first()
 
@@ -136,7 +135,7 @@ async def update_new(message_id: int, db: db_dependency,
 
 
 @router.delete('/delete-message/{message_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_new(message_id: int, db: db_dependency):
+async def delete_new(message_id: int, db: Session = Depends(get_db)):
     message_to_delete = db.query(SendingMessage).filter(SendingMessage.id == message_id).first()
 
     if message_to_delete is None:
