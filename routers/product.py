@@ -1,4 +1,3 @@
-from typing import Annotated
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, Path, UploadFile, File, Form
 from starlette import status
@@ -14,13 +13,13 @@ router = APIRouter(
 
 
 class ProductRequest(BaseModel):
-    name: Annotated[str, Form()]
+    name: str
     image: UploadFile = None
-    price: Annotated[int, Form()]
-    display_order: Annotated[int, Form()]
-    remaining_quantity: Annotated[int, Form()]
-    is_active: Annotated[bool, Form()]
-    filial: Annotated[str, Form()]
+    price: int
+    display_order: int
+    remaining_quantity: int
+    is_active: bool
+    filial: str
 
 
 def get_db():
@@ -32,11 +31,8 @@ def get_db():
         db.close()
 
 
-db_dependency = Annotated[Session, Depends(get_db)]
-
-
 @router.get('/', status_code=status.HTTP_200_OK)
-async def get_all_products(db: db_dependency):
+async def get_all_products(db: Session = Depends(get_db)):
     result = db.query(Product).all()
     if result:
         return result
@@ -45,7 +41,7 @@ async def get_all_products(db: db_dependency):
 
 
 @router.get('/{product_id}', status_code=status.HTTP_200_OK)
-async def get_current_products(product_id: int, db: db_dependency):
+async def get_current_products(product_id: int, db: Session = Depends(get_db)):
     current_product = db.query(Product).filter(Product.id == product_id).first()
     if current_product:
         return current_product
@@ -54,7 +50,7 @@ async def get_current_products(product_id: int, db: db_dependency):
 
 
 @router.post('/add-product', status_code=status.HTTP_201_CREATED)
-async def add_product(db: db_dependency, product_request: ProductRequest = Depends(ProductRequest)):
+async def add_product(db: Session = Depends(get_db), product_request: ProductRequest = Depends(ProductRequest)):
 
     product_model = Product(name=product_request.name,
                             image=product_request.image.filename,
@@ -68,7 +64,7 @@ async def add_product(db: db_dependency, product_request: ProductRequest = Depen
 
 
 @router.put('/update-product/{product_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def update_product(product_id: int, db: db_dependency,
+async def update_product(product_id: int, db: Session = Depends(get_db),
                          product_request: ProductRequest = Depends(ProductRequest)):
 
     product_model = db.query(Product).filter(Product.id == product_id).first()
@@ -89,7 +85,7 @@ async def update_product(product_id: int, db: db_dependency,
 
 
 @router.delete('/delete-product/{product_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def delete_product(product_id: int, db: db_dependency):
+async def delete_product(product_id: int, db: Session = Depends(get_db)):
     product_model = db.query(Product).filter(Product.id == product_id).first()
     if product_model is None:
         raise HTTPException(status_code=404, detail='Product not found.')
