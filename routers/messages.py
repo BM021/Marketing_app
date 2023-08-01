@@ -31,7 +31,6 @@ def get_db():
         db.close()
 
 
-
 SMTP_HOST = 'smtp.gmail.com'
 SMTP_PORT = 465
 
